@@ -75,7 +75,7 @@ class EmailMarketingAdmin(admin.ModelAdmin):
 
 # ----------------------------
 # Custom Docs
-# ----------------------------
+# ---------------------------
 @admin.register(CustomDoc)
 class CustomDocAdmin(admin.ModelAdmin):
     list_display = ("id", "title", "user", "visibility", "date_created")
