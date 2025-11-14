@@ -65,7 +65,7 @@ class ArticleAdAdmin(admin.ModelAdmin):
 
 # --------------------------
 # Email Marketing
-# ---------------------------
+# --------------------------
 @admin.register(EmailMarketing)
 class EmailMarketingAdmin(admin.ModelAdmin):
     list_display = ("id", "feature_name", "user", "visibility", "date_created")
