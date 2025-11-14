@@ -63,9 +63,9 @@ class ArticleAdAdmin(admin.ModelAdmin):
     list_filter = ("visibility", "date_created")
     ordering = ("-date_created",)
 
-# ----------------------------
+# ---------------------------
 # Email Marketing
-# ----------------------------
+# ---------------------------
 @admin.register(EmailMarketing)
 class EmailMarketingAdmin(admin.ModelAdmin):
     list_display = ("id", "feature_name", "user", "visibility", "date_created")
