@@ -69,7 +69,6 @@ class CustomDocInput(Schema):
 class ChatGPTResponse(Schema):
     response: str
     id: str
-    credits: float
 
 
 class CustomDocument(Schema):

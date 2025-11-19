@@ -19,9 +19,11 @@ from django.contrib import admin
 from django.urls import path
 from core.auth import api as auth_api   
 from core.user_settings import api as settings_api
+from core.facebookadcopy import api as facebook_ad_api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", auth_api.urls),
     path("api/settings/", settings_api.urls),
+    path("api/facebook-ad/", facebook_ad_api.urls),
 ]
