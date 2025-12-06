@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 import environ
 import os
+from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -70,10 +71,12 @@ INSTALLED_APPS = [
     'ninja_jwt',
     'ninja_extra',
     'ninja_jwt.token_blacklist',
+    "django_extensions",
 
 ]
 
 MIDDLEWARE = [
+    'django.middleware.common.CommonMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     "django.middleware.security.SecurityMiddleware",
@@ -165,3 +168,14 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+NINJA_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),  # Access token valid for 15 days
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),  # Refresh token valid for 30 days
+    'ROTATE_REFRESH_TOKENS': True,  # Optional: rotate refresh token on use
+    'BLACKLIST_AFTER_ROTATION': True,  # Optional: blacklist old refresh tokens
+}
