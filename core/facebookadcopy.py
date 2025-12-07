@@ -328,6 +328,7 @@ class FacebookAdCopyAPI:
                     "visibility": facebook_ad.visibility,
                     "can_edit": can_edit_on_public,
                     "is_authenticated": user_authenticated,
+                    "image": facebook_ad.image,
                 }
 
                 return 200, {
@@ -354,6 +355,7 @@ class FacebookAdCopyAPI:
                         "visibility": facebook_ad.visibility,
                         "can_edit": True,
                         "is_authenticated": user_authenticated,
+                        "image": facebook_ad.image,
                     }
 
                     return 200, {
