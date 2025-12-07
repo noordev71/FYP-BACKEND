@@ -60,21 +60,32 @@ gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 def get_gemini_completion(prompt_text):
     try:
         response = gemini_model.generate_content(prompt_text, stream=True)
+        print("Streaming started...")  # Log when streaming begins
+        
         for chunk in response:
             if not chunk:
                 break
 
-            if chunk:
-                data = json.dumps(
-                    {
-                        "message": "Response is being generated",
-                        "data": chunk.text,
-                    }
-                )
-                yield f"data: {data}\n\n"
+            # Log each chunk received
+            print(f"Received chunk: {chunk.text}")
+
+            # Send each chunk as a part of the response
+            data = json.dumps(
+                {
+                    "message": "Response is being generated",
+                    "data": chunk.text,
+                }
+            )
+            yield f"data: {data}\n\n"
+
+        # Final log when the streaming is complete
+        print("Streaming completed.")
+        
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
         return
+
+
 
 # def get_gemini_completion(prompt_text):
 #     # A list of fake chunks we will stream

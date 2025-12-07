@@ -14,12 +14,32 @@ from datetime import datetime, timedelta
 from django.db.models import Sum
 from django.utils import timezone
 import random
+import requests
+import os
+import json
+import base64
+import torch
+from diffusers import DiffusionPipeline
+from PIL import Image
+from io import BytesIO
+import base64
+
 from core.prompts.facebook_prompts import (
     create_facebook_prompt,
     create_facebook_title_prompt,
 )
 
 api = NinjaExtraAPI(urls_namespace="FacebookAdCopy")
+
+# # Load the model
+# pipe = DiffusionPipeline.from_pretrained(
+#     "stabilityai/stable-diffusion-xl-base-1.0",
+#     torch_dtype=torch.float16,
+#     use_safetensors=True,
+#     variant="fp16",
+#     low_cpu_mem_usage=True  # Optimize memory usage
+# ).to("cpu")
+
 
 facebook_features = {
     "Standard": {
@@ -139,6 +159,43 @@ class FacebookAdCopyAPI:
         else:
             return 400, {"detail": "Unauthorized"}
 
+
+    def generate_image_from_prompt(self, facebook_ad, prompt, filename=None):
+        if not filename:
+            filename = f"media/facebook_ads/{facebook_ad.id}.png"
+        os.makedirs("media/facebook_ads", exist_ok=True)
+
+        # Generate image
+        API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+        model_url = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
+
+        headers = {
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        # Payload to send to the model API
+        payload = {
+            "inputs": prompt  # Just the prompt, no 'options' needed
+        }
+
+        # Send the request to Hugging Face API
+        response = requests.post(model_url, headers=headers, json=payload)
+
+        # Check for successful response
+        if response.status_code == 200:
+            image_data = response.content  # Direct binary content of the image
+
+            # Save the image as a file
+            image = Image.open(BytesIO(image_data))
+            image.save(filename)
+        else:
+            print("Error:", response.text)
+            return None
+
+        return f"/{filename}"
+
+
     @http_post("/create", response={200: Dict, 400: Dict}, auth=JWTAuth())
     
     def create_facebook_ad(self, request, data: FacebookAdCopyInput):
@@ -156,9 +213,13 @@ class FacebookAdCopyAPI:
             reviewed_item=data.reviewed_item,
             feature_name=data.feature_name,
         )
+        prompt = f"{data.service_or_product} for {data.ideal_market}, {data.offering_uniqueness}, CTA: {data.cta}"
+        image_url = self.generate_image_from_prompt(facebook_ad, prompt)
+        facebook_ad.image = image_url
+        print("IMAGE URL", facebook_ad.image)
         facebook_ad.save()
-        return {"id": facebook_ad.pk, "post_type": "facebook_ad"}
-       
+        return {"id": facebook_ad.pk, "post_type": "facebook_ad", "image": "http://127.0.0.1:8000" + image_url}
+    
 
     @http_post("/save-response", response={200: Dict, 400: Dict}, auth=JWTAuth())
     
