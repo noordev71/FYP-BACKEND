@@ -71,6 +71,7 @@ class FacebookAd(models.Model):
     feature_name = models.CharField(max_length=255)
     response = models.TextField(blank=True, null=True)
     title = models.TextField(blank=True)
+    image = models.TextField(blank=True, null=True)
     date_created = models.DateTimeField(default=date.today)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     module_credit_cost = models.IntegerField(default=0)

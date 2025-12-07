@@ -20,10 +20,12 @@ from django.urls import path
 from core.auth import api as auth_api   
 from core.user_settings import api as settings_api
 from core.facebookadcopy import api as facebook_ad_api
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", auth_api.urls),
     path("api/settings/", settings_api.urls),
     path("api/facebook-ad/", facebook_ad_api.urls),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

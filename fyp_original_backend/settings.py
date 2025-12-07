@@ -179,3 +179,6 @@ NINJA_JWT = {
     'ROTATE_REFRESH_TOKENS': True,  # Optional: rotate refresh token on use
     'BLACKLIST_AFTER_ROTATION': True,  # Optional: blacklist old refresh tokens
 }
+# settings.py
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
