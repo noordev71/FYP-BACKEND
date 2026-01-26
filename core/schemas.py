@@ -90,8 +90,6 @@ class ArticleGeneration(Schema):
 
 class SettingsUpdateInput(Schema):
     email: str
-    first_name: str
-    last_name: str
     old_password: Optional[str] = ""
     new_password: Optional[str] = ""
 
