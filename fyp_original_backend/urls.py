@@ -20,6 +20,8 @@ from django.urls import path
 from core.auth import api as auth_api   
 from core.user_settings import api as settings_api
 from core.facebookadcopy import api as facebook_ad_api
+from core.linkedin_ad_copy import api as linkedin_ad_api
+from core.email_marketing import api as email_marketing
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -28,4 +30,6 @@ urlpatterns = [
     path("api/auth/", auth_api.urls),
     path("api/settings/", settings_api.urls),
     path("api/facebook-ad/", facebook_ad_api.urls),
+    path("api/linkedin-ad/", linkedin_ad_api.urls),
+    path("api/email-marketing/", email_marketing.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
