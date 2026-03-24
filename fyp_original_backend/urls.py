@@ -16,12 +16,16 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from core.auth import api as auth_api   
 from core.user_settings import api as settings_api
 from core.facebookadcopy import api as facebook_ad_api
 from django.conf import settings
 from django.conf.urls.static import static
+
+# Router for poster generator
+router = DefaultRouter()
 
 urlpatterns = [
     path("admin/", admin.site.urls),

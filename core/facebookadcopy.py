@@ -161,39 +161,56 @@ class FacebookAdCopyAPI:
 
 
     def generate_image_from_prompt(self, facebook_ad, prompt, filename=None):
+        print("DEBUG: Entered generate_image_from_prompt")  # Step 1
+
         if not filename:
             filename = f"media/facebook_ads/{facebook_ad.id}.png"
         os.makedirs("media/facebook_ads", exist_ok=True)
 
-        # Generate image
-        API_KEY = os.getenv("HUGGINGFACE_API_KEY")
-        model_url = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
+        # Step 2: Check environment variable
+        API_KEY = os.getenv("HF_API_KEY")
+        print("DEBUG: API_KEY loaded:", API_KEY)
+
+        if not API_KEY:
+            print("ERROR: HF API_KEY is missing!")
+            return None
+
+        model_url = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-3-medium-diffusers"
 
         headers = {
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json"
         }
 
-        # Payload to send to the model API
-        payload = {
-            "inputs": prompt  # Just the prompt, no 'options' needed
-        }
+        payload = {"inputs": prompt}
+        print("DEBUG: Payload prepared:", payload)  # Step 3
 
-        # Send the request to Hugging Face API
-        response = requests.post(model_url, headers=headers, json=payload)
+        try:
+            response = requests.post(model_url, headers=headers, json=payload)
+            print("DEBUG: HF API response status:", response.status_code)
 
-        # Check for successful response
-        if response.status_code == 200:
-            image_data = response.content  # Direct binary content of the image
+            if response.status_code != 200:
+                print("ERROR: HF API request failed:", response.text)
+                return None
 
-            # Save the image as a file
+            # Hugging Face now returns raw image bytes
+            image_data = response.content
+            if not image_data:
+                print("ERROR: No image data returned!")
+                return None
+
             image = Image.open(BytesIO(image_data))
             image.save(filename)
-        else:
-            print("Error:", response.text)
+            print("DEBUG: Image saved successfully at", filename)
+
+            return f"/{filename}"
+
+        except Exception as e:
+            print("ERROR: Exception sending request to HF API:", str(e))
             return None
 
-        return f"/{filename}"
+
+
 
 
     @http_post("/create", response={200: Dict, 400: Dict}, auth=JWTAuth())
@@ -213,12 +230,56 @@ class FacebookAdCopyAPI:
             reviewed_item=data.reviewed_item,
             feature_name=data.feature_name,
         )
-        prompt = f"{data.service_or_product} for {data.ideal_market}, {data.offering_uniqueness}, CTA: {data.cta}"
-        image_url = self.generate_image_from_prompt(facebook_ad, prompt)
+        product = data.offering_uniqueness + " " + data.service_or_product
+        # Send request to FYP-MODEL API
+        image_url = None
+        try:
+            model_api_url = "http://127.0.0.1:8001/api/generate"
+            payload = {
+                "product": product,
+                "model": "base"
+            }
+            print(f"DEBUG: Sending request to {model_api_url} with payload: {payload}")
+            model_response = requests.post(model_api_url, json=payload, timeout=60)
+            print(f"DEBUG: Response status code: {model_response.status_code}")
+            
+            if model_response.status_code == 200:
+                # The model API returns the image directly or as bytes
+                image_data = model_response.content
+                filename = f"media/facebook_ads/{facebook_ad.id}_model.png"
+                os.makedirs("media/facebook_ads", exist_ok=True)
+                
+                with open(filename, 'wb') as f:
+                    f.write(image_data)
+                
+                image_url = f"/{filename}"
+                print("DEBUG: Image from FYP-MODEL API saved at", filename)
+            else:
+                print(f"ERROR: FYP-MODEL API failed with status {model_response.status_code}")
+                print(f"ERROR: Response text: {model_response.text}")
+                image_url = None
+        except requests.exceptions.ConnectionError as e:
+            print(f"ERROR: Connection failed to FYP-MODEL API: {str(e)}")
+            image_url = None
+        except requests.exceptions.Timeout as e:
+            print(f"ERROR: Request timeout to FYP-MODEL API: {str(e)}")
+            image_url = None
+        except Exception as e:
+            print(f"ERROR: Unexpected error reaching FYP-MODEL API: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            image_url = None
+        
+        # Fallback to local generation if model API fails
+        if not image_url:
+            product = data.offering_uniqueness + " " + data.service_or_product
+            prompt = f"A visually striking social media ad advertising {data.service_or_product} for {data.ideal_market}. The poster showcases {data.service_or_product} in the center, highlighted with dramatic lighting and realistic reflections Include complementary elements or backgrounds that fit the product (e.g., lifestyle, nature, urban, or abstract patterns) a small, Bold, minimalistic text with a catchy tagline with feature {data.offering_uniqueness}, and call-to-action:, a short CTA: {data.cta} Modern design, high contrast colors, attention-grabbing layout, professional composition suitable for Instagram, Facebook, and other social media ads, cinematic and realistic rendering, high-resolution."
+            image_url = self.generate_image_from_prompt(facebook_ad, prompt)
+        
         facebook_ad.image = image_url
         print("IMAGE URL", facebook_ad.image)
         facebook_ad.save()
-        return {"id": facebook_ad.pk, "post_type": "facebook_ad", "image": "http://127.0.0.1:8000" + image_url}
+        return {"id": facebook_ad.pk, "post_type": "facebook_ad", "image": image_url}
     
 
     @http_post("/save-response", response={200: Dict, 400: Dict}, auth=JWTAuth())

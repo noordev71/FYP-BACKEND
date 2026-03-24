@@ -1,1 +1,9 @@
 .env
+*.pyc
+core/__pycache__/
+fyp_original_backend/__pycache__/
+core/migrations/__pycache__/
+media/
+node_modules/
+package-lock.json
+ package.json
